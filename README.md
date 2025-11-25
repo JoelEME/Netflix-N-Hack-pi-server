@@ -4,7 +4,8 @@ Inject custom JavaScript into the Netflix PS5 error screen by intercepting Netfl
 
 PS5 firmware version: 4.03-12.XX
 
-Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000
+Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Needs to be properly merged) 
+Recommeneded download link merged 6.00: https://pkg-zone.com/details/PPSA01615
 
 > This project uses a local MITM proxy to inject and execute `inject.js` on the Netflix error page
 
@@ -66,6 +67,7 @@ Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000
 >
 > Etcher will appear stuck at **0%** for a while, then at **85-99%** for several minutes.
 > This is normal, let it finish without interruption!
+> If you encounter damaged image warnings, reboot your pc, redownload the image or use a different enclosure/motherboard slot for the m.2 SSD.
 
 #### Step 5: Install the M.2 Drive in the PS5
 - Power off the PS5 completely.
@@ -108,8 +110,9 @@ Follow Sony’s official guide to restore your PS5 system from the USB:
 
 If using **Wi-Fi**:
 1. Choose **Enter Manually**.
-2. Set **Security Method** to **WPA-Personal** (or similar).
-3. Enter your **Wi-Fi network name** and **password**.
+2. Enter your SSID **Wi-Fi network name**.
+2. Set **Security Method** to **WPA-Personal/WPA2..** (or similar).
+3. Enter your ***Wi-Fi network password**.
 
 ---
 
@@ -129,7 +132,7 @@ For either **Wi-Fi** or **LAN**, continue the setup:
 
 ## Step 4: Finalize and Connect
 - Wait for the console to attempt a connection.
-- You may see a **network failure or PSN connection error** — this is expected and can be safely ignored.
+- You may see **Can't connect to the internet** — this is expected and can be ignored after pressing OK.
 - The connection will still function normally.
 
 You can now open **Netflix** safely.
@@ -179,26 +182,26 @@ python ws.py
 
 On your PS5:
 
-1. Go to Settings → Network.
+1. Go to Settings > Network > Settings > Set Up Internet Connection.  
 
+2. Scroll to the bottom and select Set Up Manually.  
 
-2. Select Set Up Internet Connection and choose your connection type (Wi-Fi or LAN).
+3. Choose Connection Type **Use Wi-Fi** or **Use a LAN Cable**
+If using **Wi-Fi**:
+Choose **Enter Manually**, Enter your SSID **Wi-Fi network name**. Set **Security Method** to **WPA-Personal/WPA2..** (or similar) then Enter your ***Wi-Fi network password**.
 
+4. Use Automatic for DNS Settings and MTU Settings.
 
-3. Use Automatic for DNS Settings and MTU Settings.
-
-
-4. When prompted for Proxy Server, choose Use and enter:
+5. At Proxy Server, choose Use and enter:
 
 - IP address: \<your local machine IP\>
 
 - Port: 8080
 
+6. Press Done and wait for the connection to establish
+- You may see **Can't connect to the internet** — this is expected and can be ignored after pressing OK.
 
-
-5. Save settings and run Test Internet Connection (be ready to press it).
-
-### Edit inject_elfldr_automated.js and inject.js:
+7. Edit inject.js and inject_elfldr_automated.js:
 
 ```
 const ip_script = "10.0.0.2"; // IP address of computer running mitmproxy.
@@ -212,11 +215,14 @@ const ip_script_port = 8080; //port which mitmproxy is running on
 
 
 > [!NOTE]
-> expect a crash (for now), but if you see elfldr listening on port 9021 you can send your elf payload. 
+If you see elfldr listening on port 9021 you can send your elf payload. 
 
 ### if it fails reboot and try again
 
-
+### Troubleshooting
+- If the Netflix application crashes shortly after opening it, reopen it to retry. 
+- If you see a green text error "Exception" press X or O to retry. 
+- If Lapse fails you will see a notification telling you to reboot the console, you must reboot to retry.
 
 
 
@@ -226,7 +232,7 @@ const ip_script_port = 8080; //port which mitmproxy is running on
 - [c0w-ar](https://github.com/c0w-ar/) for complete inject.js userland exploit and lapse port from Y2JB!
 - [ufm42](https://github.com/ufm42) for regex sandbox escape exploit and ideas!
 - [autechre](https://github.com/autechre-warp) for the idea!
-- [Dr.yenyen](https://github.com/DrYenyen) for testing and coordinating system back up, and much more help!
+- [Dr.Yenyen](https://github.com/DrYenyen) for testing and coordinating system back up, and much more help!
 - [Gezine](https://github.com/gezine) for help with exploit/Y2JB for reference and original lapse.js!
 - Rush for creating system backup, 256GB and 2TB images !
 - [Jester](https://github.com/god-jester) for testing 2TB and devising easiest imaging method, and gathered all images for m.2!
