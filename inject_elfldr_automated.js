@@ -1399,7 +1399,7 @@ function main () {
         logger.flush();
 
         if (!is_jailbroken()) {
-            send_notification("Jailbreak didn't succeed");
+            send_notification("Jailbreak didn't succeed. Reboot and Try again!");
             throw new Error("Jailbreak didn't succeed");
         }
 
