@@ -235,7 +235,7 @@ If you see elfldr listening on port 9021 you can send your elf payload.
 - [autechre](https://github.com/autechre-warp) for the idea!
 - [Dr.Yenyen](https://github.com/DrYenyen) for testing and coordinating system back up, and much more help!
 - [Gezine](https://github.com/gezine) for help with exploit/Y2JB for reference and original lapse.js!
-- Rush for creating system backup, 256GB and 2TB images !
+- Rush for creating system backup, 256GB and 2TB images and hours of testing!!
 - [Jester](https://github.com/god-jester) for testing 2TB and devising easiest imaging method, and gathered all images for m.2!
 
 ---
