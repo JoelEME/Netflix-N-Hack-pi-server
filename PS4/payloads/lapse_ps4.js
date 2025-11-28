@@ -1,6 +1,6 @@
 // lapse_ps4.js - PS4 kernel exploit (lapse) ported from lapse.py/lapse.lua
 // Uses primitives from inject.js (syscall, call, malloc, read/write functions)
-
+send_notification("Lapse currently not working\nexpect a crash!");
 // Configuration
 const MAIN_CORE = 4;
 const MAIN_RTPRIO = 0x100;
