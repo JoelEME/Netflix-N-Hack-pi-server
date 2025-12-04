@@ -70,25 +70,26 @@ def request(flow: http.HTTPFlow) -> None:
         print(f"[*] Blocked HTTP request to: {hostname}")
         return
 
-    # Map error text js to inject.js
+    # Map error text js to inject_auto_bundle.js (auto-runs lapse + binloader)
     if "/js/common/config/text/config.text.lruderrorpage" in flow.request.path:
-        inject_path = os.path.join(os.path.dirname(__file__), "inject.js")
+        inject_path = os.path.join(os.path.dirname(__file__), "inject_auto_bundle.js")
         print(f"[*] Injecting JavaScript from: {inject_path}")
 
         try:
             with open(inject_path, "rb") as f:
                 content = f.read()
-                print(f"[+] Loaded {len(content)} bytes from inject.js")
+                print(f"[+] Loaded {len(content)} bytes from inject_auto_bundle.js")
                 flow.response = http.Response.make(
                     200,
                     content,
                     {"Content-Type": "application/javascript"}
                 )
         except FileNotFoundError:
-            print(f"[!] ERROR: inject.js not found at {inject_path}")
+            print(f"[!] ERROR: inject_auto_bundle.js not found at {inject_path}")
+            print(f"[!] Run ./bundle_auto.sh to generate it")
             flow.response = http.Response.make(
                 404,
-                b"File not found: inject.js",
+                b"File not found: inject_auto_bundle.js - run ./bundle_auto.sh",
                 {"Content-Type": "text/plain"}
             )
 

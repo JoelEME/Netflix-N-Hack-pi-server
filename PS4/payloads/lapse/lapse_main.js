@@ -38,7 +38,7 @@
         const setup_success = setup();
         if (!setup_success) {
             logger.log("Setup failed");
-            send_notification("Lapse: Setup failed");
+            send_notification("Lapse Failed\nReboot and try again");
             return;
         }
         logger.log("Setup completed");
@@ -52,7 +52,7 @@
 
         if (sd_pair === null) {
             logger.log("[FAILED] Stage 1");
-            send_notification("Lapse: FAILED at Stage 1");
+            send_notification("Lapse Failed\nReboot and try again");
             return;
         }
         logger.log("[OK] Stage 1: " + stage1_time + "ms");
@@ -66,7 +66,7 @@
 
         if (leak_result === null) {
             logger.log("[FAILED] Stage 2");
-            send_notification("Lapse: FAILED at Stage 2");
+            send_notification("Lapse Failed\nReboot and try again");
             return;
         }
         logger.log("[OK] Stage 2: " + stage2_time + "ms");
@@ -90,7 +90,7 @@
 
         if (pktopts_sds === null) {
             logger.log("[FAILED] Stage 3");
-            send_notification("Lapse: FAILED at Stage 3");
+            send_notification("Lapse Failed\nReboot and try again");
             return;
         }
         logger.log("[OK] Stage 3: " + stage3_time + "ms");
@@ -111,7 +111,7 @@
 
         if (arw_result === null) {
             logger.log("[FAILED] Stage 4");
-            send_notification("Lapse: FAILED at Stage 4");
+            send_notification("Lapse Failed\nReboot and try again");
             return;
         }
         logger.log("[OK] Stage 4: " + stage4_time + "ms");
@@ -228,13 +228,12 @@
         logger.log("========================================");
         logger.flush();
 
-        send_notification("Jailbreak OK!");
 
     } catch (e) {
         logger.log("Lapse Error: " + e.message);
         logger.log(e.stack);
         logger.flush();
-        send_notification("Lapse: ERROR - " + e.message);
+        send_notification("Lapse Failed\nReboot and try again");
     }
 
     // =========================================================

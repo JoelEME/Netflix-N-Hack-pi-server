@@ -49,12 +49,12 @@ const BL_SYSCALL = {
     is_in_sandbox: 0x249,
 };
 
-// File open flags
-const O_RDONLY = 0n;
-const O_WRONLY = 1n;
-const O_RDWR = 2n;
-const O_CREAT = 0x200n;
-const O_TRUNC = 0x400n;
+// File open flags (use conditional to avoid redeclaration when bundled)
+if (typeof BL_O_RDONLY === 'undefined') BL_O_RDONLY = 0n;
+if (typeof BL_O_WRONLY === 'undefined') BL_O_WRONLY = 1n;
+if (typeof BL_O_RDWR === 'undefined') BL_O_RDWR = 2n;
+if (typeof BL_O_CREAT === 'undefined') BL_O_CREAT = 0x200n;
+if (typeof BL_O_TRUNC === 'undefined') BL_O_TRUNC = 0x400n;
 
 // USB and data paths (check usb0-usb4 like BD-JB does)
 const USB_PAYLOAD_PATHS = [
@@ -233,7 +233,7 @@ function bl_read_file(path) {
     }
 
     const path_addr = bl_alloc_string(path);
-    const fd = syscall(BigInt(BL_SYSCALL.open), path_addr, O_RDONLY, 0n);
+    const fd = syscall(BigInt(BL_SYSCALL.open), path_addr, BL_O_RDONLY, 0n);
     if (bl_is_error(fd)) {
         logger.log("  open failed");
         return null;
@@ -270,7 +270,7 @@ function bl_read_file(path) {
 // Write buffer to file
 function bl_write_file(path, buf, size) {
     const path_addr = bl_alloc_string(path);
-    const flags = O_WRONLY | O_CREAT | O_TRUNC;
+    const flags = BL_O_WRONLY | BL_O_CREAT | BL_O_TRUNC;
     logger.log("  write_file: open(" + path + ", flags=" + hex(Number(flags)) + ")");
 
     const fd = syscall(BigInt(BL_SYSCALL.open), path_addr, flags, 0o755n);
@@ -757,7 +757,6 @@ function bin_loader_main() {
             }
 
             // Load from USB
-            send_notification("Loading USB payload...");
             return bl_load_from_file(usb_path);
         }
     }
@@ -766,7 +765,6 @@ function bin_loader_main() {
     const data_size = bl_file_exists(DATA_PAYLOAD_PATH);
     if (data_size > 0) {
         logger.log("Found cached payload: " + DATA_PAYLOAD_PATH + " (" + data_size + " bytes)");
-        send_notification("Loading cached payload...");
         return bl_load_from_file(DATA_PAYLOAD_PATH);
     }
 
