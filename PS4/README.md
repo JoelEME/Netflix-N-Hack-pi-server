@@ -62,6 +62,7 @@ It will appear to download the newest version, but after install it should downg
 
 Set your proxy in ps4 network settings to this:
 
+> [!NOTE]
 > **Address**: `172.105.156.37`
 > **Port**: `42069`
 
