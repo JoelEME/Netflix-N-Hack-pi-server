@@ -30,8 +30,9 @@ Need help? Ask me on [Discord](https://discord.gg/QMGHzzW89V)
 > Downgrading is experimental and may not work for you. If you accidentally update to 1.59 you cannot downgrade with MITM. **Extended storage images are planned**
 
 > [!NOTE]
-> please make sure you do this correctly. Backup restore will not backup licenses. Downgrade at your own risk!. if you accidentally upgrade to 1.59, you cannot downgrade without existing jailbreak
-> 
+> If your previous Netflix version is above 1.53. You will need an existing Jailbreak to fix the "Please update the application" notification.
+> FTP into /user/download/CUSA00XXX (whichever region you are in)
+and delete "download0_info.dat"
 
 ### Install & Run Downgrade Proxy
 ```bash
@@ -55,10 +56,6 @@ On your PS4:
 
 3. Select **Check for Updates**
 
-
-
-if its successfully downgraded but you get a "forced update message",**if you already have a jailbreak** FTP into /user/download/CUSA00XXX (whichever region you are in)
-and delete "download0_info.dat"
 
 ---
 
