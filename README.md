@@ -1,5 +1,7 @@
 # Netflix 'N Hack
 
+
+
 Inject custom JavaScript into the Netflix PS5 error screen by intercepting Netflix's requests to localhost.
 
 PS5 firmware version: 4.03-12.XX
@@ -10,35 +12,72 @@ Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Need
 
 > This project uses a local MITM proxy to inject and execute `inject.js` on the Netflix error page
 
-
+Having issues? Let me know on [Discord](https://discord.gg/QMGHzzW89V)
 ---
 # Instructions
 
-## Download image from [Releases](https://github.com/earthonion/Netflix-N-Hack/releases/latest)
-
-### M.2 Drive Setup (PCIe Gen 4 NVMe)
-
+### Extended Storage Setup 
 
 > [!WARNING]
-> This will wipe your M.2 drive.
-
+> This will wipe your drive.
 
 **Disclaimer:** Only works on PS5s that have an activated account. Real PSN account or Fake activated via jailbreak.
 
 **Do not update your console to activate!** Use System backup method below
+
+### Extended Storage Drive Setup (PS4)
 
 #### Step 1: Download balenaEtcher
 - Download **balenaEtcher** for Windows, macOS, or Linux from:
   [https://etcher.balena.io](https://etcher.balena.io/#download-etcher)
 
 #### Step 2: Download the Image Archive
+- Download the **`.7z` archive** for your region from the [**Releases** section.](https://github.com/earthonion/netflix-n-hack/releases) For PS4 the Images are Netflix_PS4_xx.7z ,US/EU/AS to indicate the region they are for.
+> [!NOTE]
+> Extended Storage does not require an exact capacity beyond the minimum of 256GB. Meaning that if your drive is 256GB you can use the image. If your drive is 500GB you can use the image. Or if it is 1TB you can use the image and etc up to 8TB. But if it is 250GB you cannot use the image.**
+- The `.7z` download size is roughly ~**95-200 MB** and around 400MB unpacked.
+
+#### Moving the Netflix App to Internal Storage
+1. Go to Settings -> Storage -> Extended Storage -> Applications  -> [Press Options on controller] -> Move To System Storage
+2. Press X on the Netflix App to tick and select it. 
+3. Go to "Move" and press X.
+4. Press OK on the prompt to move the app to internal storage. It will then move to internal storage and be usable for the exploit. Accessible from the Media tab of the XMB.
+
+### Extended Storage Drive Setup (PS5)
+
+#### Step 1: Download balenaEtcher
+- Download **balenaEtcher** for Windows, macOS, or Linux from:
+  [https://etcher.balena.io](https://etcher.balena.io/#download-etcher)
+
+#### Step 2: Download the Image Archive
+- Download the **`.7z` archive** for your desired region from the [**Releases** section.](https://github.com/earthonion/netflix-n-hack/releases) the PS5 Extended Storage Image is PS5_EU_Ext.7z
+  - NOTE: ** Extended Storage does not require an exact capacity beyond the minimum of 256GB. Meaning that if your drive is 256GB you can use the image. If your drive is 500GB you can use the image. Or if it is 1TB you can use the image and etc up to 8TB. But if it is 250GB you cannot use the image.**
+- The `.7z` download size is roughly ~**95-300 MB** and around 500MB unpacked.
+
+#### Moving the Netflix App to Internal Storage
+1. Go to Settings>Storage>USB Extended Storage>Games and Apps
+2. Press X to select the Netflix app.
+3. Go to "Select Items to Move" and press X.
+4. The Netflix app should be selected now go to "Move" and press X 
+5. Press OK on the prompt to move the app to internal storage. It will then move to internal storage and be usable for the exploit. Accessible from the Media tab of the XMB.
+
+
+
+### M.2 Drive Setup (PCIe Gen 4 NVMe for PS5)
+
+#### Step 1: Download balenaEtcher
+- Download **balenaEtcher** for Windows, macOS, or Linux from:
+  [https://etcher.balena.io](https://etcher.balena.io/#download-etcher)
+  
+#### Step 2: Download the Image Archive
 - Download the **`.7z` archive** for your desired capacity from the [**Releases** section.](https://github.com/earthonion/netflix-n-hack/releases)
-  - NOTE: **Exact capacity matters** - not all 1TB drives are 1000GB: some are 1024GB, same with 2000/2048, 4000/4096; choose carefully!
-- The `.7z` download size is roughly ~**95-100 MB** for all capacities.
+  - NOTE: **Exact capacity matters for M.2 Images only** - not all 1TB drives are 1000GB: some are 1024GB, same with 2000/2048, 4000/4096; choose carefully!
+- The `.7z` download size is roughly ~**95-200 MB**. Unpacked files range from ~**95100MB-4GB**.
 
 #### Step 3: Extract the ZIP Image
 - Extract the downloaded `.7z` file.
 - Inside, you will see a `.zip` image file, with size depending on the target SSD:
+
 
   - **256 GB image:** ~**380 MB** `.zip`
   - **500 GB image:** ~**670 MB** `.zip`
@@ -51,6 +90,7 @@ Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Need
 > **Note:** When you load this image in balenaEtcher, you may see a
 > `Missing partition table` warning. This is expected for encrypted PS5 drives.
 > It is safe to click **Continue**.
+
 
 #### Step 4: Write the Image with balenaEtcher
 1. Connect your **M.2 SSD (PCIe Gen 4 NVMe)** to your computer (using a dock/enclosure or spare M.2 slot).
@@ -76,6 +116,8 @@ Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Need
 - Power the PS5 back on; the console should now see the preinstalled Netflix app, viewable under `Storage` settings.
 - Move app from the M.2 to console storage, then reformat the M.2 drive in under `Storage` settings to safely continue using it.
 
+#### Step 6: Move the Netflix App to Internal Storage
+
 ---
 
 ### System Backup Restore
@@ -90,8 +132,6 @@ Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Need
 #### Step 2: Restore the System
 Follow Sony’s official guide to restore your PS5 system from the USB:
 [https://www.playstation.com/en-us/support/hardware/back-up-ps5-data-USB/](https://www.playstation.com/en-us/support/hardware/back-up-ps5-data-USB/)
-
-
 
 
 # Safe Internet Connection Setup for Netflix
@@ -233,12 +273,8 @@ If you see elfldr listening on port 9021 you can send your elf payload.
 - [c0w-ar](https://github.com/c0w-ar/) for complete inject.js userland exploit and lapse port from Y2JB!
 - [ufm42](https://github.com/ufm42) for regex sandbox escape exploit and ideas!
 - [autechre](https://github.com/autechre-warp) for the idea!
-- [Dr.Yenyen](https://github.com/DrYenyen) for testing and coordinating system back up, and much more help!
+- [Dr.Yenyen](https://github.com/DrYenyen) for testing and coordinating system back up, M.2 Drives, Extended Storage, making PS5 Extended storage Image and much more help!
 - [Gezine](https://github.com/gezine) for help with exploit/Y2JB for reference and original lapse.js!
-- Rush for creating system backup, 256GB and 2TB images and hours of testing!!
-- [Jester](https://github.com/god-jester) for testing 2TB and devising easiest imaging method, and gathered all images for m.2!
-
----
-### License
-
-This repository uses the GNU license. See LICENSE for details.
+- Rush for creating system backup, 256GB and 2TB M.2 Images, PS4 Extended Storage Images and hours of testing!!
+- [Jester](https://github.com/god-jester) for testing 2TB and devising easiest imaging method, and gathering all images for m.2!
+- [TeRex777] (https://x.com/TeRex777_) for PS5 App Extended Storage method. 

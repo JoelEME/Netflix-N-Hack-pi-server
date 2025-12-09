@@ -1,7 +1,7 @@
 // PS4 Kernel Read/Write primitives
 // Ported from PS5 version - adjusted for PS4 structure offsets
 
-kernel = {
+var kernel = {
     addr: {},
     copyout: null,
     copyin: null,
@@ -104,7 +104,7 @@ kernel.write_qword = function(dest, value) {
 };
 
 // IPv6 kernel r/w primitive
-ipv6_kernel_rw = {
+var ipv6_kernel_rw = {
     data: {},
     ofiles: null,
     kread8: null,

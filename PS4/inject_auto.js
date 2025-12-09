@@ -222,6 +222,23 @@ var syscall_gadget_table = {};  // Global for payloads - syscall gadgets by sysc
 var syscall_wrapper = null;  // Global for payloads - "syscall; ret" gadget address
 var eboot_base = null;  // Global for payloads - eboot base address
 var g = null;  // Global for payloads - gadgets object
+
+// Additional globals needed by eval'd payloads (lapse, binloader, etc.)
+var base_heap_add = null;
+var libkernel_base = null;
+var libc_base = null;
+var fake_frame = null;
+var fake_bytecode = null;
+var fake_rop_return = null;
+var fake_rop = null;
+var addrof = null;
+var get_backing_store = null;
+var malloc = null;
+var add_rop_smash = null;
+var add_rop_smash_sharedfunctioninfo = null;
+var add_rop_smash_code = null;
+var add_rop_smash_code_store = null;
+var real_rbp = null;
 class gadgets {
     constructor() {
         try {
@@ -385,7 +402,13 @@ function hook_tryagain(){
     }
 
 function main () {
-    
+    // Declare local variables (ones that don't need to be accessed by eval'd payloads)
+    // NOTE: g, eboot_base, base_heap_add, libkernel_base, libc_base, syscall_wrapper,
+    //       fake_frame, fake_bytecode, fake_rop_return, fake_rop, addrof, get_backing_store,
+    //       malloc, add_rop_smash_*, real_rbp are GLOBAL (declared above) for payload access
+    var map1, oob_arr_temp, oob_arr, victim_arr, obj_arr;
+    var fake_rw, fake_obj_arr, ret;
+
     logger.init();
 
     logger.log("=== Netflix n Hack ===");

@@ -73,7 +73,7 @@ function get_kpatch_shellcode(fw_version) {
 
 // Firmware-specific offsets for PS4
 
-offset_ps4_9_00 = {
+var offset_ps4_9_00 = {
     EVF_OFFSET: 0x7F6F27n,
     PRISON0: 0x111F870n,
     ROOTVNODE: 0x21EFF20n,
@@ -82,7 +82,7 @@ offset_ps4_9_00 = {
     JMP_RSI_GADGET: 0x4C7ADn,
 };
 
-offset_ps4_9_03 = {
+var offset_ps4_9_03 = {
     EVF_OFFSET: 0x7F4CE7n,
     PRISON0: 0x111B840n,
     ROOTVNODE: 0x21EBF20n,
@@ -91,7 +91,7 @@ offset_ps4_9_03 = {
     JMP_RSI_GADGET: 0x5325Bn,
 };
 
-offset_ps4_9_50 = {
+var offset_ps4_9_50 = {
     EVF_OFFSET: 0x769A88n,
     PRISON0: 0x11137D0n,
     ROOTVNODE: 0x21A6C30n,
@@ -100,7 +100,7 @@ offset_ps4_9_50 = {
     JMP_RSI_GADGET: 0x15A6Dn,
 };
 
-offset_ps4_10_00 = {
+var offset_ps4_10_00 = {
     EVF_OFFSET: 0x7B5133n,
     PRISON0: 0x111B8B0n,
     ROOTVNODE: 0x1B25BD0n,
@@ -109,7 +109,7 @@ offset_ps4_10_00 = {
     JMP_RSI_GADGET: 0x68B1n,
 };
 
-offset_ps4_10_50 = {
+var offset_ps4_10_50 = {
     EVF_OFFSET: 0x7A7B14n,
     PRISON0: 0x111B910n,
     ROOTVNODE: 0x1BF81F0n,
@@ -118,7 +118,7 @@ offset_ps4_10_50 = {
     JMP_RSI_GADGET: 0x50DEDn,
 };
 
-offset_ps4_11_00 = {
+var offset_ps4_11_00 = {
     EVF_OFFSET: 0x7FC26Fn,
     PRISON0: 0x111F830n,
     ROOTVNODE: 0x2116640n,
@@ -127,7 +127,7 @@ offset_ps4_11_00 = {
     JMP_RSI_GADGET: 0x71A21n,
 };
 
-offset_ps4_11_02 = {
+var offset_ps4_11_02 = {
     EVF_OFFSET: 0x7FC22Fn,
     PRISON0: 0x111F830n,
     ROOTVNODE: 0x2116640n,
@@ -136,7 +136,7 @@ offset_ps4_11_02 = {
     JMP_RSI_GADGET: 0x71A21n,
 };
 
-offset_ps4_11_50 = {
+var offset_ps4_11_50 = {
     EVF_OFFSET: 0x784318n,
     PRISON0: 0x111FA18n,
     ROOTVNODE: 0x2136E90n,
@@ -145,7 +145,7 @@ offset_ps4_11_50 = {
     JMP_RSI_GADGET: 0x704D5n,
 };
 
-offset_ps4_12_00 = {
+var offset_ps4_12_00 = {
     EVF_OFFSET: 0x784798n,
     PRISON0: 0x111FA18n,
     ROOTVNODE: 0x2136E90n,
@@ -155,7 +155,7 @@ offset_ps4_12_00 = {
 };
 
 // Map firmware versions to offset objects
-ps4_kernel_offset_list = {
+var ps4_kernel_offset_list = {
     "9.00": offset_ps4_9_00,
     "9.03": offset_ps4_9_03,
     "9.04": offset_ps4_9_03,
@@ -175,7 +175,7 @@ ps4_kernel_offset_list = {
     "12.02": offset_ps4_12_00,
 };
 
-kernel_offset = null;
+var kernel_offset = null;
 
 function get_kernel_offset(FW_VERSION) {
     const fw_offsets = ps4_kernel_offset_list[FW_VERSION];

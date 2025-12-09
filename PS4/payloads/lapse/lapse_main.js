@@ -205,7 +205,7 @@
                     all_patches_ok = false;
                 }
             } catch (e) {
-                logger.log("  [FAIL] mmap RWX test error: " + e.message);
+                logger.log("  [FAIL] mmap RWX test error: " + e.message + "\n" + e.stack);
                 all_patches_ok = false;
             }
 

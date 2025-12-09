@@ -49,12 +49,12 @@ const BL_SYSCALL = {
     is_in_sandbox: 0x249,
 };
 
-// File open flags (use conditional to avoid redeclaration when bundled)
-if (typeof BL_O_RDONLY === 'undefined') BL_O_RDONLY = 0n;
-if (typeof BL_O_WRONLY === 'undefined') BL_O_WRONLY = 1n;
-if (typeof BL_O_RDWR === 'undefined') BL_O_RDWR = 2n;
-if (typeof BL_O_CREAT === 'undefined') BL_O_CREAT = 0x200n;
-if (typeof BL_O_TRUNC === 'undefined') BL_O_TRUNC = 0x400n;
+// File open flags
+var BL_O_RDONLY = 0n;
+var BL_O_WRONLY = 1n;
+var BL_O_RDWR = 2n;
+var BL_O_CREAT = 0x200n;
+var BL_O_TRUNC = 0x400n;
 
 // USB and data paths (check usb0-usb4 like BD-JB does)
 const USB_PAYLOAD_PATHS = [

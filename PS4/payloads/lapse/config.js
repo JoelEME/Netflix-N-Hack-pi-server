@@ -1,41 +1,30 @@
 // PS4 Lapse Configuration
 // Ported from PS5 version for Netflix n Hack
 
-FW_VERSION = "";
-IS_PS4 = true;
+var FW_VERSION = "";
+var IS_PS4 = true;
 
-PAGE_SIZE = 0x4000;
-PHYS_PAGE_SIZE = 0x1000;
+var PAGE_SIZE = 0x4000;
+var PHYS_PAGE_SIZE = 0x1000;
 
-LIBKERNEL_HANDLE = 0x2001n;
+var LIBKERNEL_HANDLE = 0x2001n;
 
-// Socket constants - only define if not already in scope
-// (inject.js defines some of these as const in the eval scope)
-if (typeof AF_UNIX === 'undefined') AF_UNIX = 1n;
-if (typeof AF_INET === 'undefined') AF_INET = 2n;
-if (typeof AF_INET6 === 'undefined') AF_INET6 = 28n;
+// Socket constants (only ones not in inject_auto.js)
+// Already in inject_auto.js: AF_INET, AF_INET6, SOCK_STREAM, SOCK_DGRAM,
+//   IPPROTO_UDP, IPPROTO_IPV6, IPV6_PKTINFO, SOL_SOCKET, SO_REUSEADDR
+var AF_UNIX = 1n;
+var IPPROTO_TCP = 6n;
+var SO_LINGER = 0x80n;
 
-if (typeof SOCK_STREAM === 'undefined') SOCK_STREAM = 1n;
-if (typeof SOCK_DGRAM === 'undefined') SOCK_DGRAM = 2n;
-
-if (typeof IPPROTO_TCP === 'undefined') IPPROTO_TCP = 6n;
-if (typeof IPPROTO_UDP === 'undefined') IPPROTO_UDP = 17n;
-if (typeof IPPROTO_IPV6 === 'undefined') IPPROTO_IPV6 = 41n;
-
-if (typeof SOL_SOCKET === 'undefined') SOL_SOCKET = 0xFFFFn;
-if (typeof SO_REUSEADDR === 'undefined') SO_REUSEADDR = 4n;
-if (typeof SO_LINGER === 'undefined') SO_LINGER = 0x80n;
-
-// IPv6 socket options
-if (typeof IPV6_PKTINFO === 'undefined') IPV6_PKTINFO = 46n;
-if (typeof IPV6_NEXTHOP === 'undefined') IPV6_NEXTHOP = 48n;
-if (typeof IPV6_RTHDR === 'undefined') IPV6_RTHDR = 51n;
-if (typeof IPV6_TCLASS === 'undefined') IPV6_TCLASS = 61n;
-if (typeof IPV6_2292PKTOPTIONS === 'undefined') IPV6_2292PKTOPTIONS = 25n;
+// IPv6 socket options (IPV6_PKTINFO already in inject_auto.js)
+var IPV6_NEXTHOP = 48n;
+var IPV6_RTHDR = 51n;
+var IPV6_TCLASS = 61n;
+var IPV6_2292PKTOPTIONS = 25n;
 
 // TCP socket options
-if (typeof TCP_INFO === 'undefined') TCP_INFO = 32n;
-if (typeof TCPS_ESTABLISHED === 'undefined') TCPS_ESTABLISHED = 4n;
+var TCP_INFO = 32n;
+var TCPS_ESTABLISHED = 4n;
 
 // All syscalls from lapse.py (PS4)
 // (SYSCALL object is already defined in inject.js, we just add properties)
@@ -75,49 +64,49 @@ SYSCALL.aio_multi_cancel = 0x29An;  // 666
 SYSCALL.aio_submit_cmd = 0x29Dn;    // 669
 SYSCALL.kexec = 0x295n;             // 661
 
-MAIN_CORE = 4;  // Same as yarpe
-MAIN_RTPRIO = 0x100;
-NUM_WORKERS = 2;
-NUM_GROOMS = 0x200;
-NUM_HANDLES = 0x100;
-NUM_SDS = 64;
-NUM_SDS_ALT = 48;
-NUM_RACES = 100;
-NUM_ALIAS = 100;
-LEAK_LEN = 16;
-NUM_LEAKS = 32;
-NUM_CLOBBERS = 8;
-MAX_AIO_IDS = 0x80;
+var MAIN_CORE = 4;  // Same as yarpe
+var MAIN_RTPRIO = 0x100;
+var NUM_WORKERS = 2;
+var NUM_GROOMS = 0x200;
+var NUM_HANDLES = 0x100;
+var NUM_SDS = 64;
+var NUM_SDS_ALT = 48;
+var NUM_RACES = 100;
+var NUM_ALIAS = 100;
+var LEAK_LEN = 16;
+var NUM_LEAKS = 32;
+var NUM_CLOBBERS = 8;
+var MAX_AIO_IDS = 0x80;
 
-AIO_CMD_READ = 1n;
-AIO_CMD_FLAG_MULTI = 0x1000n;
-AIO_CMD_MULTI_READ = 0x1001n;
-AIO_CMD_WRITE = 2n;
-AIO_STATE_COMPLETE = 3n;
-AIO_STATE_ABORTED = 4n;
+var AIO_CMD_READ = 1n;
+var AIO_CMD_FLAG_MULTI = 0x1000n;
+var AIO_CMD_MULTI_READ = 0x1001n;
+var AIO_CMD_WRITE = 2n;
+var AIO_STATE_COMPLETE = 3n;
+var AIO_STATE_ABORTED = 4n;
 
-SCE_KERNEL_ERROR_ESRCH = 0x80020003n;
+var SCE_KERNEL_ERROR_ESRCH = 0x80020003n;
 
-RTP_SET = 1n;
-PRI_REALTIME = 2n;
+var RTP_SET = 1n;
+var PRI_REALTIME = 2n;
 
 // TCP info structure size for getsockopt
-size_tcp_info = 0xEC;
+var size_tcp_info = 0xEC;
 
-block_fd = 0xffffffffffffffffn;
-unblock_fd = 0xffffffffffffffffn;
-block_id = -1n;
-groom_ids = null;
-sds = null;
-sds_alt = null;
-prev_core = -1;
-prev_rtprio = 0n;
-ready_signal = 0n;
-deletion_signal = 0n;
-pipe_buf = 0n;
+var block_fd = 0xffffffffffffffffn;
+var unblock_fd = 0xffffffffffffffffn;
+var block_id = -1n;
+var groom_ids = null;
+var sds = null;
+var sds_alt = null;
+var prev_core = -1;
+var prev_rtprio = 0n;
+var ready_signal = 0n;
+var deletion_signal = 0n;
+var pipe_buf = 0n;
 
-saved_fpu_ctrl = 0;
-saved_mxcsr = 0;
+var saved_fpu_ctrl = 0;
+var saved_mxcsr = 0;
 
 function sysctlbyname(name, oldp, oldp_len, newp, newp_len) {
     const translate_name_mib = malloc(0x8);

