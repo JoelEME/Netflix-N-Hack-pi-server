@@ -45,11 +45,23 @@ pip install mitmproxy
 # Start the downgrade proxy
 mitmproxy -s downgrader.py --ssl-insecure --set stream_large_bodies=3m
 ```
+
+
 **Console Instructions**
 
-Before continuing. set up your Internet connection and when it asks for proxy, click use, then input the local IP of the computer running mitmproxy 
-
 On your PS4:
+
+
+
+go into settings -> network -> set up internet connection ->  wifi or lan -> Custom -> automatic -> do not specify -> DNS Automatic -> automatic -> Proxy server **USE** -> enter your computer ip address port : 8080
+
+>[!TIP]
+> To get you local IP address, in a console run the command
+>Windows: Open CMD -> run `ipconfig` -> look under “IPv4 Address” in your active adapter (Wi-Fi/Ethernet).
+>
+>Linux: Run `ip a` → find your network interface (e.g., eth0, wlan0) → check the inet line.
+>
+>Mac: Run `ifconfig` → find en0/en1 → read the `inet` value (or `ipconfig getifaddr en0` for Wi-Fi).
 
 1. Go to Netflix **on the home screen**
 
