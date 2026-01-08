@@ -99,7 +99,7 @@ def request(flow: http.HTTPFlow) -> None:
 
         try:
             with open(inject_path, "rb") as f:
-                content = f.read().replace("PLS_STOP_HARDCODING_IPS",proxyServerIP)
+                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS",proxyServerIP)
                 print(f"[+] Loaded {len(content)} bytes from lapse.js")
                 flow.response = http.Response.make(
                     200,
@@ -120,7 +120,7 @@ def request(flow: http.HTTPFlow) -> None:
 
         try:
             with open(inject_path, "rb") as f:
-                content = f.read().replace("PLS_STOP_HARDCODING_IPS",proxyServerIP)
+                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS",proxyServerIP)
                 print(f"[+] Loaded {len(content)} bytes from elf_loader.js")
                 flow.response = http.Response.make(
                     200,
@@ -141,7 +141,7 @@ def request(flow: http.HTTPFlow) -> None:
 
         try:
             with open(inject_path, "rb") as f:
-                content = f.read().replace("PLS_STOP_HARDCODING_IPS",proxyServerIP)
+                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS",proxyServerIP)
                 print(f"[+] Loaded {len(content)} bytes from elfldr.elf")
                 flow.response = http.Response.make(
                     200,
@@ -163,7 +163,7 @@ def request(flow: http.HTTPFlow) -> None:
 
         try:
             with open(inject_path, "rb") as f:
-                content = f.read().replace("PLS_STOP_HARDCODING_IPS",proxyServerIP)
+                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS",proxyServerIP)
                 print(f"[+] Loaded {len(content)} bytes from inject_auto_bundle.js")
                 flow.response = http.Response.make(
                     200,
