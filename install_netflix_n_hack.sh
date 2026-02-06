@@ -2,8 +2,7 @@
 set -e
 
 echo "==============================================="
-echo " Netflix-N-Hack - Instalador Pi Server"
-echo " (PIPE-SAFE · soporta wget | bash)"
+echo " Netflix-N-Hack - Instalador Pi Server (venv)"
 echo "==============================================="
 
 # =====================================================
@@ -16,29 +15,21 @@ PAYLOAD_DIR="$BASE_DIR/payloads"
 ETAHEN_API_URL="https://api.github.com/repos/etaHEN/etaHEN/releases/latest"
 
 # =====================================================
-# PIPE-SAFE INPUT
+# INPUT USUARIO (PIPE SAFE)
 # =====================================================
 
-if [ ! -t 0 ]; then
-    echo "ℹ Instalación vía pipe detectada (wget | bash)"
-fi
+read -p "👉 Ingresa la IP de la PS5 (ej: 192.168.1.170): " TARGET_IP </dev/tty
 
 RPI_IP=$(hostname -I | awk '{print $1}')
-echo "✔ IP Raspberry detectada: $RPI_IP"
 
-while true; do
-    read -p "👉 Ingresa la IP de la PS5 (ej: 192.168.1.170): " TARGET_IP </dev/tty
-    [[ -n "$TARGET_IP" ]] && break
-    echo "❌ IP inválida, intenta nuevamente"
-done
-
-echo "✔ IP PS5 configurada: $TARGET_IP"
+echo "✔ IP Raspberry detectada : $RPI_IP"
+echo "✔ IP PS5 configurada     : $TARGET_IP"
 
 # =====================================================
 # DEPENDENCIAS DEL SISTEMA
 # =====================================================
 
-echo "[*] Instalando dependencias..."
+echo "[*] Instalando dependencias del sistema..."
 sudo apt update
 sudo apt install -y \
     python3 \
@@ -50,14 +41,14 @@ sudo apt install -y \
     curl
 
 # =====================================================
-# CLONAR REPOSITORIO
+# CLONAR REPOSITORIO ORIGINAL
 # =====================================================
 
 if [ ! -d "$BASE_DIR" ]; then
-    echo "[*] Clonando Netflix-N-Hack..."
+    echo "[*] Clonando repositorio Netflix-N-Hack..."
     git clone https://github.com/earthonion/Netflix-N-Hack.git "$BASE_DIR"
 else
-    echo "[*] Repositorio existente, reutilizando"
+    echo "[*] Repositorio ya existe, se reutiliza"
 fi
 
 cd "$BASE_DIR"
@@ -74,16 +65,15 @@ pip install --upgrade pip
 pip install mitmproxy websockets
 
 # =====================================================
-# DESCARGAR etaHEN REAL
+# DESCARGA etaHEN REAL (GITHUB RELEASES)
 # =====================================================
 
-echo "[*] Descargando última versión de etaHEN..."
-
+echo "[*] Descargando etaHEN (última versión)..."
 mkdir -p "$PAYLOAD_DIR"
 
 BIN_URL=$(curl -s "$ETAHEN_API_URL" \
   | grep '"browser_download_url"' \
-  | grep '.bin"' \
+  | grep '\.bin"' \
   | head -n 1 \
   | cut -d '"' -f 4)
 
@@ -92,44 +82,62 @@ if [ -z "$BIN_URL" ]; then
     exit 1
 fi
 
+echo "✔ Asset detectado:"
+echo "  $BIN_URL"
+
 curl -L "$BIN_URL" -o "$PAYLOAD_DIR/etaHEN.bin"
 
 if [ ! -s "$PAYLOAD_DIR/etaHEN.bin" ]; then
-    echo "❌ etaHEN.bin vacío"
+    echo "❌ Error: etaHEN.bin vacío"
     exit 1
 fi
 
 echo "✔ etaHEN descargado correctamente"
 
 # =====================================================
-# MODIFICAR JS (IP RASPBERRY)
+# MODIFICAR inject.js
 # =====================================================
 
-echo "[*] Configurando inject.js"
+echo "[*] Configurando inject.js..."
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject.js
 
-echo "[*] Configurando inject_elfldr_automated.js"
+# =====================================================
+# MODIFICAR inject_elfldr_automated.js
+# =====================================================
+
+echo "[*] Configurando inject_elfldr_automated.js..."
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject_elfldr_automated.js
 
 # =====================================================
-# SOBRESCRIBIR proxy.py (ORIGINAL + CAMBIOS)
+# SOBRESCRIBIR proxy.py (ORIGINAL + EXTENSIONES)
 # =====================================================
 
-echo "[*] Instalando proxy.py modificado..."
+echo "[*] Instalando proxy.py modificado (completo)..."
 
 cat > "$BASE_DIR/proxy.py" <<EOF
-$(sed "s/TARGET_IP = \".*\"/TARGET_IP = \"$TARGET_IP\"/" <<'PYCODE'
 from mitmproxy import http
 from mitmproxy.proxy.layers import tls
 import os
+
+# =====================================================
+# IMPORTS PARA ENVÍO AUTOMÁTICO
+# =====================================================
 import subprocess
 import threading
 import time
 
+# =====================================================
+# CONFIGURACIÓN DE ENVÍO AUTOMÁTICO
+# =====================================================
+
 PAYLOAD_SEND_DELAY = 1
 PAYLOAD_BIN_PATH = "/home/pi/Netflix-N-Hack/payloads/etaHEN.bin"
-TARGET_IP = "REPLACED_BY_INSTALLER"
+TARGET_IP = "$TARGET_IP"
 TARGET_PORT = 9021
+
+# =====================================================
+# LOAD BLOCKED DOMAINS
+# =====================================================
 
 BLOCKED_DOMAINS = set()
 
@@ -141,59 +149,79 @@ def load_blocked_domains():
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#"):
-                    BLOCKED_DOMAINS.add(line.split()[-1].lower())
-        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains")
+                    parts = line.split()
+                    domain = parts[-1] if parts else line
+                    BLOCKED_DOMAINS.add(domain.lower())
+        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains from hosts.txt")
+    except FileNotFoundError:
+        print(f"[!] WARNING: hosts.txt not found")
     except Exception as e:
-        print(f"[!] hosts.txt error: {e}")
+        print(f"[!] ERROR loading hosts.txt: {e}")
 
 load_blocked_domains()
 
-def is_blocked(host):
-    return any(b in host.lower() for b in BLOCKED_DOMAINS)
+def is_blocked(hostname: str) -> bool:
+    hostname_lower = hostname.lower()
+    for blocked in BLOCKED_DOMAINS:
+        if blocked in hostname_lower:
+            return True
+    return False
 
-def tls_clienthello(data):
+def tls_clienthello(data: tls.ClientHelloData) -> None:
     if data.context.server.address:
-        host = data.context.server.address[0]
-        if is_blocked(host):
-            raise ConnectionRefusedError()
+        hostname = data.context.server.address[0]
+        if is_blocked(hostname):
+            raise ConnectionRefusedError(f"[*] Blocked HTTPS connection to: {hostname}")
+
+# =====================================================
+# ENVÍO PAYLOAD CON DELAY (NC -N)
+# =====================================================
 
 def send_payload_with_delay():
     def worker():
         time.sleep(PAYLOAD_SEND_DELAY)
-        subprocess.Popen(
-            f"cat {PAYLOAD_BIN_PATH} | nc -N {TARGET_IP} {TARGET_PORT}",
-            shell=True,
+        cmd = f"cat {PAYLOAD_BIN_PATH} | nc -N {TARGET_IP} {TARGET_PORT}"
+        subprocess.Popen(cmd, shell=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
     threading.Thread(target=worker, daemon=True).start()
 
-def request(flow):
-    host = flow.request.pretty_host
-    ip = flow.client_conn.sockname[0].encode()
+# =====================================================
+# MAIN HTTP HANDLER
+# =====================================================
 
-    if "netflix" in host:
-        flow.response = http.Response.make(200, b"uwu")
+def request(flow: http.HTTPFlow) -> None:
+    hostname = flow.request.pretty_host
+    proxyServerIP = flow.client_conn.sockname[0].encode("UTF-8")
+
+    if "netflix" in hostname:
+        flow.response = http.Response.make(
+            200, b"uwu", {"Content-Type": "application/x-msl+json"}
+        )
         return
 
-    if is_blocked(host):
+    if is_blocked(hostname):
         flow.response = http.Response.make(404, b"uwu")
         return
 
     base = os.path.dirname(__file__)
 
     if "/js/common/config/text/config.text.lruderrorpage" in flow.request.path:
-        p = os.path.join(base, "inject_elfldr_automated.js")
-        flow.response = http.Response.make(200, open(p,"rb").read().replace(b"PLS_STOP_HARDCODING_IPS", ip))
+        with open(os.path.join(base, "inject_elfldr_automated.js"), "rb") as f:
+            content = f.read().replace(b"PLS_STOP_HARDCODING_IPS", proxyServerIP)
+        flow.response = http.Response.make(200, content,
+            {"Content-Type": "application/javascript"})
         return
 
     if "/js/elfldr.elf" in flow.request.path:
-        p = os.path.join(base, "payloads", "elfldr.elf")
-        flow.response = http.Response.make(200, open(p,"rb").read())
+        with open(os.path.join(base, "payloads", "elfldr.elf"), "rb") as f:
+            content = f.read()
+        flow.response = http.Response.make(
+            200, content, {"Content-Type": "application/octet-stream"}
+        )
         send_payload_with_delay()
         return
-PYCODE
-)
 EOF
 
 # =====================================================
@@ -213,6 +241,8 @@ fi
 # SYSTEMD SERVICES
 # =====================================================
 
+echo "[*] Creando servicios systemd..."
+
 sudo tee /etc/systemd/system/netflix_mitmproxy.service >/dev/null <<SERVICE
 [Unit]
 Description=Netflix-N-Hack mitmproxy
@@ -223,6 +253,7 @@ User=pi
 WorkingDirectory=$BASE_DIR
 ExecStart=$VENV_DIR/bin/mitmdump -s proxy.py -p 8080
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -238,6 +269,7 @@ User=pi
 WorkingDirectory=$BASE_DIR
 ExecStart=$VENV_DIR/bin/python ws.py
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -247,7 +279,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable netflix_mitmproxy netflix_ws
 
 # =====================================================
-# PROMPT FINAL PIPE-SAFE
+# PROMPT FINAL (SOLO START OPCIONAL)
 # =====================================================
 
 read -p "¿Iniciar servicios ahora? (s/n): " RESP </dev/tty
@@ -255,14 +287,11 @@ read -p "¿Iniciar servicios ahora? (s/n): " RESP </dev/tty
 if [[ "$RESP" =~ ^[sS]$ ]]; then
     sudo systemctl start netflix_mitmproxy
     sudo systemctl start netflix_ws
-
-    echo "==============================================="
-    echo " ✅ INSTALACIÓN COMPLETA"
-    echo " ▶ Servicios INICIADOS ahora"
-    echo "==============================================="
+    echo "▶ Servicios INICIADOS ahora"
 else
-    echo "==============================================="
-    echo " ✅ INSTALACIÓN COMPLETA"
-    echo " ▶ Servicios habilitados para el próximo reinicio"
-    echo "==============================================="
+    echo "▶ Servicios habilitados para el próximo reinicio"
 fi
+
+echo "==============================================="
+echo " ✅ INSTALACIÓN COMPLETA"
+echo "==============================================="
