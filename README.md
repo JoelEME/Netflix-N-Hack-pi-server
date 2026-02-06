@@ -1,16 +1,13 @@
 # Netflix 'N Hack for only proxy local on raspberry pi
 
 
-
 Inject custom JavaScript into the Netflix PS5 error screen by intercepting Netflix's requests to localhost.
 
 PS5 firmware version: 4.03-12.XX
 
-Lowest working version: https://prosperopatches.com/PPSA01614?v=05.000.000 (Needs to be properly merged) 
+*Recommended download link merged 6.00:** https://pkg-zone.com/details/PPSA01615
 
-**Recommended download link merged 6.00:** https://pkg-zone.com/details/PPSA01615
-
-> This project uses a local MITM proxy to inject and execute `inject.js` on the Netflix error page
+> This project uses a local MITM proxy to inject and execute `inject.js` on the Netflix error page with original
 
 > [!IMPORTANT]
 > Jailbreaking or modifying your console falls outside the manufacturer’s intended use.  
@@ -24,25 +21,21 @@ Any execution of unsigned or custom code is performed **solely at your own risk*
 >
 > Proceed only if you understand and accept these risks.
 
-Having issues? Let me know on [Discord](https://discord.gg/QMGHzzW89V)
 ---
 # Instructions
 
 raspberry pi
 Installing is as simple as running this one command in a terminal
 
-wget -qO- https://raw.githubusercontent.com/JoelEME/Netflix-N-Hack-pi-server/refs/heads/main/install_netflix_n_hack.sh | bash
-
----
-# How to run proxy locally
-
-## Installation & Usage
-
-
-
+```
+## wget -qO- https://raw.githubusercontent.com/JoelEME/Netflix-N-Hack-pi-server/refs/heads/main/install_netflix_n_hack.sh | bash
 ```
 
-### Network / Proxy Setup
+---
+# script run proxy locally automatically
+
+## Usage
+
 
 On your PS5:
 
@@ -58,28 +51,33 @@ Choose **Enter Manually**, Enter your SSID **Wi-Fi network name**. Set **Securit
 
 5. At Proxy Server, choose Use and enter:
 
-- IP address: \<your local machine IP\>
+- IP address: \<your raspberry IP\>
 
 - Port: 8080
 
 6. Press Done and wait for the connection to establish
 - You may see **Can't connect to the internet** — this is expected and can be ignored after pressing OK.
 
-7. Edit inject.js and inject_elfldr_automated.js:
+7. inject.js and inject_elfldr_automated.js edit automatic
 
-```
-const ip_script = "10.0.0.2"; // IP address of computer running mitmproxy.
-const ip_script_port = 8080; //port which mitmproxy is running on
-
-```
-
-> Make sure your PC running mitmproxy is on the same network and reachable at the IP you entered.
 
 ### Open Netflix and wait. 
 
 
 > [!NOTE]
-If you see elfldr listening on port 9021 you can send your elf payload. 
+this install download lastest etaHEN and launch payload on day of the install.
+> 
+update lastest etaHEN 
+```
+## curl -s https://api.github.com/repos/etaHEN/etaHEN/releases/latest \
+  | grep '"browser_download_url"' \
+  | grep '.bin"' \
+  | head -n 1 \
+  | cut -d '"' -f 4 \
+  | xargs -I {} curl -L {} -o /home/pi/Netflix-N-Hack/payloads/etaHEN.bin
+
+```
+
 
 ### if it fails reboot and try again
 
