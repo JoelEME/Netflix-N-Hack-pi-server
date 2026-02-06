@@ -119,76 +119,198 @@ cat > "$BASE_DIR/proxy.py" <<EOF
 from mitmproxy import http
 from mitmproxy.proxy.layers import tls
 import os
+
+# =====================================================
+# IMPORTS PARA ENVÍO AUTOMÁTICO
+# =====================================================
 import subprocess
 import threading
 import time
 
-PAYLOAD_SEND_DELAY = 1
+# =====================================================
+# CONFIGURACIÓN DE ENVÍO AUTOMÁTICO
+# =====================================================
+
+PAYLOAD_SEND_DELAY = 5   # ⏱️ segundos (AJUSTA AQUÍ)
 PAYLOAD_BIN_PATH = "/home/pi/Netflix-N-Hack/payloads/etaHEN.bin"
-TARGET_IP = "$TARGET_IP"
+TARGET_IP = "192.168.1.170"
 TARGET_PORT = 9021
+
+# =====================================================
+# LOAD BLOCKED DOMAINS
+# =====================================================
 
 BLOCKED_DOMAINS = set()
 
 def load_blocked_domains():
+    global BLOCKED_DOMAINS
     hosts_path = os.path.join(os.path.dirname(__file__), "hosts.txt")
+
     try:
         with open(hosts_path, "r") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#"):
-                    BLOCKED_DOMAINS.add(line.split()[-1].lower())
-    except:
-        pass
+                    parts = line.split()
+                    domain = parts[-1] if parts else line
+                    BLOCKED_DOMAINS.add(domain.lower())
+        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains from hosts.txt")
+    except FileNotFoundError:
+        print(f"[!] WARNING: hosts.txt not found at {hosts_path}")
+    except Exception as e:
+        print(f"[!] ERROR loading hosts.txt: {e}")
 
 load_blocked_domains()
 
-def is_blocked(hostname):
-    return any(b in hostname.lower() for b in BLOCKED_DOMAINS)
+def is_blocked(hostname: str) -> bool:
+    hostname_lower = hostname.lower()
+    for blocked in BLOCKED_DOMAINS:
+        if blocked in hostname_lower:
+            return True
+    return False
 
-def tls_clienthello(data):
+# =====================================================
+# TLS BLOCKER
+# =====================================================
+
+def tls_clienthello(data: tls.ClientHelloData) -> None:
     if data.context.server.address:
-        if is_blocked(data.context.server.address[0]):
-            raise ConnectionRefusedError()
+        hostname = data.context.server.address[0]
+        if is_blocked(hostname):
+            raise ConnectionRefusedError(f"[*] Blocked HTTPS connection to: {hostname}")
+
+# =====================================================
+# ENVÍO PAYLOAD CON DELAY (NC -N)
+# =====================================================
 
 def send_payload_with_delay():
+    """
+    Ejecuta exactamente:
+    cat etaHEN.bin | nc -N TARGET_IP TARGET_PORT
+    después de PAYLOAD_SEND_DELAY segundos.
+    """
     def worker():
         time.sleep(PAYLOAD_SEND_DELAY)
+
+        cmd = (
+            f"cat {PAYLOAD_BIN_PATH} | "
+            f"nc -N {TARGET_IP} {TARGET_PORT}"
+        )
+
         subprocess.Popen(
-            f"cat {PAYLOAD_BIN_PATH} | nc -N {TARGET_IP} {TARGET_PORT}",
+            cmd,
             shell=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
+
     threading.Thread(target=worker, daemon=True).start()
 
-def request(flow):
-    hostname = flow.request.pretty_host
+# =====================================================
+# MAIN HTTP HANDLER
+# =====================================================
 
+def request(flow: http.HTTPFlow) -> None:
+    hostname = flow.request.pretty_host
+    proxyServerIP = flow.client_conn.sockname[0].encode("UTF-8")
+
+    # ===============================================
+    # 1. NETFLIX BLOCKER
+    # ===============================================
     if "netflix" in hostname:
-        flow.response = http.Response.make(200, b"uwu")
+        flow.response = http.Response.make(
+            200,
+            b"uwu",
+            {"Content-Type": "application/x-msl+json"}
+        )
+        print(f"[*] Corrupted Netflix response for: {hostname}")
         return
 
+    # ===============================================
+    # 2. BLOCK HOSTS.TXT DOMAINS
+    # ===============================================
     if is_blocked(hostname):
-        flow.response = http.Response.make(404, b"uwu")
+        flow.response = http.Response.make(
+            404,
+            b"uwu",
+        )
+        print(f"[*] Blocked HTTP request to: {hostname}")
         return
 
     base = os.path.dirname(__file__)
 
+    # ===============================================
+    # 3. inject_elfldr_automated.js
+    # ===============================================
     if "/js/common/config/text/config.text.lruderrorpage" in flow.request.path:
-        with open(base + "/inject_elfldr_automated.js", "rb") as f:
-            content = f.read().replace(
-                b"PLS_STOP_HARDCODING_IPS",
-                flow.client_conn.sockname[0].encode()
+        inject_path = os.path.join(base, "inject_elfldr_automated.js")
+        print(f"[*] Injecting JavaScript from: {inject_path}")
+
+        try:
+            with open(inject_path, "rb") as f:
+                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS", proxyServerIP)
+            flow.response = http.Response.make(
+                200,
+                content,
+                {"Content-Type": "application/javascript"}
             )
-        flow.response = http.Response.make(200, content)
+        except FileNotFoundError:
+            flow.response = http.Response.make(
+                404,
+                b"Missing inject_elfldr_automated.js"
+            )
         return
 
-    if "/js/elfldr.elf" in flow.request.path:
-        with open(base + "/payloads/elfldr.elf", "rb") as f:
-            flow.response = http.Response.make(200, f.read())
-        send_payload_with_delay()
-        return
+    # ===============================================
+    # 4. PAYLOADS MAP
+    # ===============================================
+
+    PAYLOAD_MAP = {
+        "/js/lapse.js": "payloads/lapse.js",
+        "/js/elf_loader.js": "payloads/elf_loader.js",
+        "/js/elfldr.elf": "payloads/elfldr.elf",
+    }
+
+    req = flow.request.path
+
+    for url_path, payload_file in PAYLOAD_MAP.items():
+        if url_path in req:
+            full_path = os.path.join(base, payload_file)
+            print(f"[*] Serving payload from: {full_path}")
+
+            try:
+                with open(full_path, "rb") as f:
+                    content = f.read()
+
+                if payload_file.endswith(".elf"):
+                    mime = "application/octet-stream"
+                else:
+                    mime = "application/javascript"
+
+                flow.response = http.Response.make(
+                    200,
+                    content,
+                    {"Content-Type": mime}
+                )
+
+                # =================================================
+                # 🚀 DISPARO AUTOMÁTICO AL SERVIR elfldr.elf
+                # =================================================
+                if url_path == "/js/elfldr.elf":
+                    print(
+                        f"[*] elfldr.elf servido → "
+                        f"envío payload en {PAYLOAD_SEND_DELAY}s"
+                    )
+                    send_payload_with_delay()
+
+            except FileNotFoundError:
+                flow.response = http.Response.make(
+                    404,
+                    f"Missing {payload_file}".encode(),
+                    {"Content-Type": "text/plain"}
+                )
+            return
+
 EOF
 
 # =====================================================
