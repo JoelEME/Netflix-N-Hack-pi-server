@@ -15,7 +15,7 @@ PAYLOAD_DIR="$BASE_DIR/payloads"
 ETAHEN_API_URL="https://api.github.com/repos/etaHEN/etaHEN/releases/latest"
 
 # =====================================================
-# INPUT USUARIO (PIPE SAFE)
+# INPUT USUARIO PREGUNTA POR LA IP DE TU PS5
 # =====================================================
 
 read -p "👉 Ingresa la IP de la PS5 (ej: 192.168.1.170): " TARGET_IP </dev/tty
@@ -41,7 +41,7 @@ sudo apt install -y \
     curl
 
 # =====================================================
-# CLONAR REPOSITORIO
+# CLONAR REPOSITORIO ORIGINAL - GRACIAS AL CREADOR DE Netflix-N-Hack
 # =====================================================
 
 if [ ! -d "$BASE_DIR" ]; then
@@ -65,7 +65,7 @@ pip install --upgrade pip
 pip install mitmproxy websockets
 
 # =====================================================
-# DESCARGAR etaHEN (GITHUB API - ROBUSTO)
+# DESCARGA EL ULTIMO etaHEN (GITHUB API)
 # =====================================================
 
 echo "[*] Descargando etaHEN (última versión)..."
@@ -96,21 +96,21 @@ fi
 echo "✔ etaHEN descargado correctamente"
 
 # =====================================================
-# MODIFICAR inject.js
+# MODIFICA inject.js
 # =====================================================
 
 echo "[*] Configurando inject.js..."
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject.js
 
 # =====================================================
-# MODIFICAR inject_elfldr_automated.js
+# MODIFICA inject_elfldr_automated.js
 # =====================================================
 
 echo "[*] Configurando inject_elfldr_automated.js..."
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject_elfldr_automated.js
 
 # =====================================================
-# SOBRESCRIBIR proxy.py (COMPLETO, SIN RECORTES)
+# SOBRESCRIBE proxy.py para lanzar automaticamente etaHEN.bin
 # =====================================================
 
 echo "[*] Instalando proxy.py modificado..."
@@ -131,7 +131,7 @@ import time
 # CONFIGURACIÓN DE ENVÍO AUTOMÁTICO
 # =====================================================
 
-PAYLOAD_SEND_DELAY = 5   # ⏱️ segundos (AJUSTA AQUÍ)
+PAYLOAD_SEND_DELAY = 1   # ⏱️ segundos (AJUSTA AQUÍ)
 PAYLOAD_BIN_PATH = "/home/pi/Netflix-N-Hack/payloads/etaHEN.bin"
 TARGET_IP = "192.168.1.170"
 TARGET_PORT = 9021
@@ -310,7 +310,6 @@ def request(flow: http.HTTPFlow) -> None:
                     {"Content-Type": "text/plain"}
                 )
             return
-
 EOF
 
 # =====================================================
@@ -373,14 +372,17 @@ sudo systemctl enable netflix_mitmproxy netflix_ws
 
 read -p "¿Iniciar servicios ahora? (s/n): " RESP </dev/tty
 
-if [[ "\$RESP" =~ ^[sS]$ ]]; then
+if [[ "$RESP" =~ ^[sS]$ ]]; then
     sudo systemctl start netflix_mitmproxy
     sudo systemctl start netflix_ws
-    echo "✔ Servicios iniciados"
-else
-    echo "ℹ Servicios habilitados para el próximo reinicio"
-fi
 
-echo "==============================================="
-echo " ✅ INSTALACIÓN COMPLETA"
-echo "==============================================="
+    echo "==============================================="
+    echo " ✅ INSTALACIÓN COMPLETA"
+    echo " ▶ Servicios INICIADOS ahora"
+    echo "==============================================="
+else
+    echo "==============================================="
+    echo " ✅ INSTALACIÓN COMPLETA"
+    echo " ▶ Servicios habilitados para el próximo reinicio"
+    echo "==============================================="
+fi
