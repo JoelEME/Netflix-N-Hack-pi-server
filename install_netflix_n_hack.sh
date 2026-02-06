@@ -2,7 +2,8 @@
 set -e
 
 echo "==============================================="
-echo " Netflix-N-Hack - Instalador Pi Server (venv)"
+echo " Netflix-N-Hack - Instalador Pi Server"
+echo " (PIPE-SAFE · soporta wget | bash)"
 echo "==============================================="
 
 # =====================================================
@@ -15,15 +16,23 @@ PAYLOAD_DIR="$BASE_DIR/payloads"
 ETAHEN_API_URL="https://api.github.com/repos/etaHEN/etaHEN/releases/latest"
 
 # =====================================================
-# INPUT USUARIO PREGUNTA POR LA IP DE TU PS5
+# PIPE-SAFE INPUT
 # =====================================================
 
-read -p "👉 Ingresa la IP de la PS5 (ej: 192.168.1.170): " TARGET_IP </dev/tty
+if [ ! -t 0 ]; then
+    echo "ℹ Instalación vía pipe detectada (wget | bash)"
+fi
 
 RPI_IP=$(hostname -I | awk '{print $1}')
-
 echo "✔ IP Raspberry detectada: $RPI_IP"
-echo "✔ IP PS5 configurada   : $TARGET_IP"
+
+while true; do
+    read -p "👉 Ingresa la IP de la PS5 (ej: 192.168.1.170): " TARGET_IP </dev/tty
+    [[ -n "$TARGET_IP" ]] && break
+    echo "❌ IP inválida, intenta nuevamente"
+done
+
+echo "✔ IP PS5 configurada: $TARGET_IP"
 
 # =====================================================
 # DEPENDENCIAS DEL SISTEMA
@@ -41,14 +50,14 @@ sudo apt install -y \
     curl
 
 # =====================================================
-# CLONAR REPOSITORIO ORIGINAL - GRACIAS AL CREADOR DE Netflix-N-Hack
+# CLONAR REPOSITORIO
 # =====================================================
 
 if [ ! -d "$BASE_DIR" ]; then
-    echo "[*] Clonando repositorio..."
+    echo "[*] Clonando Netflix-N-Hack..."
     git clone https://github.com/earthonion/Netflix-N-Hack.git "$BASE_DIR"
 else
-    echo "[*] Repositorio ya existe, se reutiliza"
+    echo "[*] Repositorio existente, reutilizando"
 fi
 
 cd "$BASE_DIR"
@@ -65,10 +74,10 @@ pip install --upgrade pip
 pip install mitmproxy websockets
 
 # =====================================================
-# DESCARGA EL ULTIMO etaHEN (GITHUB API)
+# DESCARGAR etaHEN REAL
 # =====================================================
 
-echo "[*] Descargando etaHEN (última versión)..."
+echo "[*] Descargando última versión de etaHEN..."
 
 mkdir -p "$PAYLOAD_DIR"
 
@@ -83,270 +92,108 @@ if [ -z "$BIN_URL" ]; then
     exit 1
 fi
 
-echo "✔ Asset detectado:"
-echo "  $BIN_URL"
-
 curl -L "$BIN_URL" -o "$PAYLOAD_DIR/etaHEN.bin"
 
 if [ ! -s "$PAYLOAD_DIR/etaHEN.bin" ]; then
-    echo "❌ Error: etaHEN.bin vacío"
+    echo "❌ etaHEN.bin vacío"
     exit 1
 fi
 
 echo "✔ etaHEN descargado correctamente"
 
 # =====================================================
-# MODIFICA inject.js
+# MODIFICAR JS (IP RASPBERRY)
 # =====================================================
 
-echo "[*] Configurando inject.js..."
+echo "[*] Configurando inject.js"
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject.js
 
-# =====================================================
-# MODIFICA inject_elfldr_automated.js
-# =====================================================
-
-echo "[*] Configurando inject_elfldr_automated.js..."
+echo "[*] Configurando inject_elfldr_automated.js"
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject_elfldr_automated.js
 
 # =====================================================
-# SOBRESCRIBE proxy.py para lanzar automaticamente etaHEN.bin
+# SOBRESCRIBIR proxy.py (ORIGINAL + CAMBIOS)
 # =====================================================
 
 echo "[*] Instalando proxy.py modificado..."
 
 cat > "$BASE_DIR/proxy.py" <<EOF
+$(sed "s/TARGET_IP = \".*\"/TARGET_IP = \"$TARGET_IP\"/" <<'PYCODE'
 from mitmproxy import http
 from mitmproxy.proxy.layers import tls
 import os
-
-# =====================================================
-# IMPORTS PARA ENVÍO AUTOMÁTICO
-# =====================================================
 import subprocess
 import threading
 import time
 
-# =====================================================
-# CONFIGURACIÓN DE ENVÍO AUTOMÁTICO
-# =====================================================
-
-PAYLOAD_SEND_DELAY = 1   # ⏱️ segundos (AJUSTA AQUÍ)
+PAYLOAD_SEND_DELAY = 1
 PAYLOAD_BIN_PATH = "/home/pi/Netflix-N-Hack/payloads/etaHEN.bin"
-TARGET_IP = "192.168.1.170"
+TARGET_IP = "REPLACED_BY_INSTALLER"
 TARGET_PORT = 9021
-
-# =====================================================
-# LOAD BLOCKED DOMAINS
-# =====================================================
 
 BLOCKED_DOMAINS = set()
 
 def load_blocked_domains():
-    """Load domains from hosts.txt file"""
     global BLOCKED_DOMAINS
     hosts_path = os.path.join(os.path.dirname(__file__), "hosts.txt")
-    
     try:
         with open(hosts_path, "r") as f:
             for line in f:
                 line = line.strip()
-                # Skip empty lines and comments
                 if line and not line.startswith("#"):
-                    # Extract domain (handle format: "0.0.0.0 domain.com" or just "domain.com")
-                    parts = line.split()
-                    domain = parts[-1] if parts else line
-                    BLOCKED_DOMAINS.add(domain.lower())
-        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains from hosts.txt")
-    except FileNotFoundError:
-        print(f"[!] WARNING: hosts.txt not found at {hosts_path}")
+                    BLOCKED_DOMAINS.add(line.split()[-1].lower())
+        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains")
     except Exception as e:
-        print(f"[!] ERROR loading hosts.txt: {e}")
+        print(f"[!] hosts.txt error: {e}")
 
-# Load domains when script initializes
 load_blocked_domains()
 
-def is_blocked(hostname: str) -> bool:
-    """Check if hostname matches any blocked domain"""
-    hostname_lower = hostname.lower()
-    for blocked in BLOCKED_DOMAINS:
-        if blocked in hostname_lower:
-            return True
-    return False
+def is_blocked(host):
+    return any(b in host.lower() for b in BLOCKED_DOMAINS)
 
-def tls_clienthello(data: tls.ClientHelloData) -> None:
+def tls_clienthello(data):
     if data.context.server.address:
-        hostname = data.context.server.address[0]
-        
-        # Block domains at TLS layer
-        if is_blocked(hostname):
-            raise ConnectionRefusedError(f"[*] Blocked HTTPS connection to: {hostname}")
-
-
-def request(flow: http.HTTPFlow) -> None:
-    """Handle HTTP/HTTPS requests after TLS handshake"""
-    hostname = flow.request.pretty_host
-    proxyServerIP = flow.client_conn.sockname[0].encode("UTF-8")
-    
-    # Special handling for Netflix - corrupt the response
-    if "netflix" in hostname:
-        flow.response = http.Response.make( 
-            200,
-            b"uwu",  # probably don't need this many uwus. just corrupt the response 
-            {"Content-Type": "application/x-msl+json"}
-        )
-        print(f"[*] Corrupted Netflix response for: {hostname}")
-        return
-
-    # Block other domains from hosts.txt
-    if is_blocked(hostname):
-        flow.response = http.Response.make( 
-            404,
-            b"uwu",
-        )
-        print(f"[*] Blocked HTTP request to: {hostname}")
-
-# =====================================================
-# TLS BLOCKER
-# =====================================================
-
-def tls_clienthello(data: tls.ClientHelloData) -> None:
-    if data.context.server.address:
-        hostname = data.context.server.address[0]
-        if is_blocked(hostname):
-            raise ConnectionRefusedError(f"[*] Blocked HTTPS connection to: {hostname}")
-
-# =====================================================
-# ENVÍO PAYLOAD CON DELAY (NC -N)
-# =====================================================
+        host = data.context.server.address[0]
+        if is_blocked(host):
+            raise ConnectionRefusedError()
 
 def send_payload_with_delay():
-    """
-    Ejecuta exactamente:
-    cat etaHEN.bin | nc -N TARGET_IP TARGET_PORT
-    después de PAYLOAD_SEND_DELAY segundos.
-    """
     def worker():
         time.sleep(PAYLOAD_SEND_DELAY)
-
-        cmd = (
-            f"cat {PAYLOAD_BIN_PATH} | "
-            f"nc -N {TARGET_IP} {TARGET_PORT}"
-        )
-
         subprocess.Popen(
-            cmd,
+            f"cat {PAYLOAD_BIN_PATH} | nc -N {TARGET_IP} {TARGET_PORT}",
             shell=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-
     threading.Thread(target=worker, daemon=True).start()
 
-# =====================================================
-# MAIN HTTP HANDLER
-# =====================================================
+def request(flow):
+    host = flow.request.pretty_host
+    ip = flow.client_conn.sockname[0].encode()
 
-def request(flow: http.HTTPFlow) -> None:
-    hostname = flow.request.pretty_host
-    proxyServerIP = flow.client_conn.sockname[0].encode("UTF-8")
-
-    # ===============================================
-    # 1. NETFLIX BLOCKER
-    # ===============================================
-    if "netflix" in hostname:
-        flow.response = http.Response.make(
-            200,
-            b"uwu",
-            {"Content-Type": "application/x-msl+json"}
-        )
-        print(f"[*] Corrupted Netflix response for: {hostname}")
+    if "netflix" in host:
+        flow.response = http.Response.make(200, b"uwu")
         return
 
-    # ===============================================
-    # 2. BLOCK HOSTS.TXT DOMAINS
-    # ===============================================
-    if is_blocked(hostname):
-        flow.response = http.Response.make(
-            404,
-            b"uwu",
-        )
-        print(f"[*] Blocked HTTP request to: {hostname}")
+    if is_blocked(host):
+        flow.response = http.Response.make(404, b"uwu")
         return
 
     base = os.path.dirname(__file__)
 
-    # ===============================================
-    # 3. inject_elfldr_automated.js
-    # ===============================================
     if "/js/common/config/text/config.text.lruderrorpage" in flow.request.path:
-        inject_path = os.path.join(base, "inject_elfldr_automated.js")
-        print(f"[*] Injecting JavaScript from: {inject_path}")
-
-        try:
-            with open(inject_path, "rb") as f:
-                content = f.read().replace(b"PLS_STOP_HARDCODING_IPS", proxyServerIP)
-            flow.response = http.Response.make(
-                200,
-                content,
-                {"Content-Type": "application/javascript"}
-            )
-        except FileNotFoundError:
-            flow.response = http.Response.make(
-                404,
-                b"Missing inject_elfldr_automated.js"
-            )
+        p = os.path.join(base, "inject_elfldr_automated.js")
+        flow.response = http.Response.make(200, open(p,"rb").read().replace(b"PLS_STOP_HARDCODING_IPS", ip))
         return
 
-    # ===============================================
-    # 4. PAYLOADS MAP
-    # ===============================================
-
-    PAYLOAD_MAP = {
-        "/js/lapse.js": "payloads/lapse.js",
-        "/js/elf_loader.js": "payloads/elf_loader.js",
-        "/js/elfldr.elf": "payloads/elfldr.elf",
-    }
-
-    req = flow.request.path
-
-    for url_path, payload_file in PAYLOAD_MAP.items():
-        if url_path in req:
-            full_path = os.path.join(base, payload_file)
-            print(f"[*] Serving payload from: {full_path}")
-
-            try:
-                with open(full_path, "rb") as f:
-                    content = f.read()
-
-                if payload_file.endswith(".elf"):
-                    mime = "application/octet-stream"
-                else:
-                    mime = "application/javascript"
-
-                flow.response = http.Response.make(
-                    200,
-                    content,
-                    {"Content-Type": mime}
-                )
-
-                # =================================================
-                # 🚀 DISPARO AUTOMÁTICO AL SERVIR elfldr.elf
-                # =================================================
-                if url_path == "/js/elfldr.elf":
-                    print(
-                        f"[*] elfldr.elf servido → "
-                        f"envío payload en {PAYLOAD_SEND_DELAY}s"
-                    )
-                    send_payload_with_delay()
-
-            except FileNotFoundError:
-                flow.response = http.Response.make(
-                    404,
-                    f"Missing {payload_file}".encode(),
-                    {"Content-Type": "text/plain"}
-                )
-            return
+    if "/js/elfldr.elf" in flow.request.path:
+        p = os.path.join(base, "payloads", "elfldr.elf")
+        flow.response = http.Response.make(200, open(p,"rb").read())
+        send_payload_with_delay()
+        return
+PYCODE
+)
 EOF
 
 # =====================================================
@@ -366,8 +213,6 @@ fi
 # SYSTEMD SERVICES
 # =====================================================
 
-echo "[*] Creando servicios systemd..."
-
 sudo tee /etc/systemd/system/netflix_mitmproxy.service >/dev/null <<SERVICE
 [Unit]
 Description=Netflix-N-Hack mitmproxy
@@ -378,7 +223,6 @@ User=pi
 WorkingDirectory=$BASE_DIR
 ExecStart=$VENV_DIR/bin/mitmdump -s proxy.py -p 8080
 Restart=always
-RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -394,7 +238,6 @@ User=pi
 WorkingDirectory=$BASE_DIR
 ExecStart=$VENV_DIR/bin/python ws.py
 Restart=always
-RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -404,7 +247,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable netflix_mitmproxy netflix_ws
 
 # =====================================================
-# PROMPT FINAL (PIPE SAFE)
+# PROMPT FINAL PIPE-SAFE
 # =====================================================
 
 read -p "¿Iniciar servicios ahora? (s/n): " RESP </dev/tty
