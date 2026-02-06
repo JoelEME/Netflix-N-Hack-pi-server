@@ -28,7 +28,7 @@ raspberry pi
 Installing is as simple as running this one command in a terminal
 
 ```
-## wget -qO- https://raw.githubusercontent.com/JoelEME/Netflix-N-Hack-pi-server/refs/heads/main/install_netflix_n_hack.sh | bash
+wget -qO- https://raw.githubusercontent.com/JoelEME/Netflix-N-Hack-pi-server/refs/heads/main/install_netflix_n_hack.sh | bash
 ```
 
 ---
