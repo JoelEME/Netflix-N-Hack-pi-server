@@ -109,7 +109,7 @@ echo "[*] Configurando inject_elfldr_automated.js..."
 sed -i "s/PLS_STOP_HARDCODING_IPS/$RPI_IP/g" inject_elfldr_automated.js
 
 # =============================================================================
-# SOBRESCRIBIR proxy.py (ORIGINAL + EXTENSIONES)
+# SOBRESCRIBIR proxy.py
 # =============================================================================
 
 echo "[*] Instalando proxy.py modificado (completo)..."
@@ -136,15 +136,39 @@ TARGET_IP = "$TARGET_IP"
 TARGET_PORT = 9021
 
 # =====================================================
-# LOAD BLOCKED DOMAINS
+# LOAD BLOCKED DOMAINS from hosts.txt #
 # =====================================================
 
-BLOCKED_DOMAINS = set()
 
+    if is_blocked(hostname):
+        flow.response = http.Response.make( 
+            404,
+            b"uwu",
+        )
+        print(f"[*] Blocked HTTP request to: {hostname}")
+        return
+
+BLOCKED_DOMAINS = set()
 def load_blocked_domains():
+    """Load domains from hosts.txt file"""
     global BLOCKED_DOMAINS
     hosts_path = os.path.join(os.path.dirname(__file__), "hosts.txt")
-
+    
+    try:
+        with open(hosts_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                # Skip empty lines and comments
+                if line and not line.startswith("#"):
+                    # Extract domain (handle format: "0.0.0.0 domain.com" or just "domain.com")
+                    parts = line.split()
+                    domain = parts[-1] if parts else line
+                    BLOCKED_DOMAINS.add(domain.lower())
+        print(f"[+] Loaded {len(BLOCKED_DOMAINS)} blocked domains from hosts.txt")
+    except FileNotFoundError:
+        print(f"[!] WARNING: hosts.txt not found at {hosts_path}")
+    except Exception as e:
+        print(f"[!] ERROR loading hosts.txt: {e}")
     try:
         with open(hosts_path, "r") as f:
             for line in f:
@@ -159,15 +183,17 @@ def load_blocked_domains():
     except Exception as e:
         print(f"[!] ERROR loading hosts.txt: {e}")
 
+# Load domains when script initializes
 load_blocked_domains()
 
 def is_blocked(hostname: str) -> bool:
+    """Check if hostname matches any blocked domain"""
     hostname_lower = hostname.lower()
     for blocked in BLOCKED_DOMAINS:
         if blocked in hostname_lower:
             return True
     return False
-
+    
 # =====================================================
 # TLS BLOCKER
 # =====================================================
@@ -175,6 +201,8 @@ def is_blocked(hostname: str) -> bool:
 def tls_clienthello(data: tls.ClientHelloData) -> None:
     if data.context.server.address:
         hostname = data.context.server.address[0]
+        
+        # Block domains at TLS layer
         if is_blocked(hostname):
             raise ConnectionRefusedError(f"[*] Blocked HTTPS connection to: {hostname}")
 
@@ -210,6 +238,7 @@ def send_payload_with_delay():
 # =====================================================
 
 def request(flow: http.HTTPFlow) -> None:
+    """Handle HTTP/HTTPS requests after TLS handshake"""
     hostname = flow.request.pretty_host
     proxyServerIP = flow.client_conn.sockname[0].encode("UTF-8")
 
@@ -217,9 +246,9 @@ def request(flow: http.HTTPFlow) -> None:
     # 1. NETFLIX BLOCKER
     # ===============================================
     if "netflix" in hostname:
-        flow.response = http.Response.make(
+        flow.response = http.Response.make( 
             200,
-            b"uwu",
+            b"uwu",  # probably don't need this many uwus. just corrupt the response 
             {"Content-Type": "application/x-msl+json"}
         )
         print(f"[*] Corrupted Netflix response for: {hostname}")
@@ -229,14 +258,14 @@ def request(flow: http.HTTPFlow) -> None:
     # 2. BLOCK HOSTS.TXT DOMAINS
     # ===============================================
     if is_blocked(hostname):
-        flow.response = http.Response.make(
+        flow.response = http.Response.make( 
             404,
             b"uwu",
         )
         print(f"[*] Blocked HTTP request to: {hostname}")
         return
 
-    base = os.path.dirname(__file__)
+
 
     # ===============================================
     # 3. inject_elfldr_automated.js
